@@ -1,22 +1,22 @@
-import { ProxyIntegrationConfig, ProxyIntegrationEvent } from './lib/proxyIntegration'
-import { SnsConfig, SnsEvent } from './lib/sns'
-import { SqsConfig, SqsEvent } from './lib/sqs'
-import { S3Config, S3Event } from './lib/s3'
+import * as proxyIntegration from './lib/proxyIntegration'
+import * as sns from './lib/sns'
+import * as sqs from './lib/sqs'
+import * as s3 from './lib/s3'
 import { Context } from 'aws-lambda'
 import { EventProcessor } from './lib/EventProcessor'
 
 export interface RouteConfig {
-  proxyIntegration?: ProxyIntegrationConfig
-  sns?: SnsConfig
-  sqs?: SqsConfig
-  s3?: S3Config
+  proxyIntegration?: proxyIntegration.ProxyIntegrationConfig
+  sns?: sns.SnsConfig
+  sqs?: sqs.SqsConfig
+  s3?: s3.S3Config
   debug?: boolean
   onError?: ErrorHandler
 }
 
 export type ErrorHandler<TContext extends Context = Context> = (error?: Error, event?: RouterEvent, context?: TContext) => Promise<any> | any | void
 
-export type RouterEvent = ProxyIntegrationEvent | SnsEvent | SqsEvent | S3Event
+export type RouterEvent = proxyIntegration.ProxyIntegrationEvent | sns.SnsEvent | sqs.SqsEvent | s3.S3Event
 
 export const handler = (routeConfig: RouteConfig) => {
   const eventProcessorMapping = extractEventProcessorMapping(routeConfig)
@@ -63,6 +63,15 @@ export const handler = (routeConfig: RouteConfig) => {
   }
 }
 
+type ProcessorKey = Exclude<keyof RouteConfig, 'debug' | 'onError'>
+
+const processors: Record<ProcessorKey, EventProcessor> = {
+  proxyIntegration,
+  sns,
+  sqs,
+  s3,
+}
+
 const extractEventProcessorMapping = (routeConfig: RouteConfig) => {
   const processorMap = new Map<string, EventProcessor>()
   for (const key of Object.keys(routeConfig)) {
@@ -70,10 +79,22 @@ const extractEventProcessorMapping = (routeConfig: RouteConfig) => {
       continue
     }
     try {
-      processorMap.set(key, require(`./lib/${key}`))
+      processorMap.set(key, getProcessor(key))
     } catch (error) {
       throw new Error(`The event processor '${key}', that is mentioned in the routerConfig, cannot be instantiated (${error.toString()})`)
     }
   }
   return processorMap
+}
+
+const getProcessor = (key: string): EventProcessor => {
+  if (!isProcessorKey(key)) {
+    return require(`./lib/${key}`);
+  }
+
+  return processors[key]
+}
+
+const isProcessorKey = (key: string): key is ProcessorKey => {
+  return Object.prototype.hasOwnProperty.call(processors, key)
 }
