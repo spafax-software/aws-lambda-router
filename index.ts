@@ -17,10 +17,25 @@ export interface RouteConfig {
 export type ErrorHandler<TContext extends Context = Context> = (error?: Error, event?: RouterEvent, context?: TContext) => Promise<any> | any | void
 
 export type RouterEvent = ProxyIntegrationEvent | SnsEvent | SqsEvent | S3Event
+
 export type ProxyIntegrationEvent = proxyIntegration.ProxyIntegrationEvent;
+export type ProxyIntegrationRoute = proxyIntegration.ProxyIntegrationRoute;
+export type ProxyIntegrationConfig = proxyIntegration.ProxyIntegrationConfig;
+export type ProxyIntegrationResult = proxyIntegration.ProxyIntegrationResult;
+export type ProxyIntegrationError = proxyIntegration.ProxyIntegrationError;
+export type ProxyIntegrationErrorMapping = proxyIntegration.ProxyIntegrationErrorMapping;
+
 export type SnsEvent = sns.SnsEvent;
+export type SnsRoute = sns.SnsRoute;
+export type SnsConfig = sns.SnsConfig;
+
 export type SqsEvent = sqs.SqsEvent;
+export type SqsRoute = sqs.SqsRoute;
+export type SqsConfig = sqs.SqsConfig;
+
 export type S3Event = s3.S3Event;
+export type S3Route = s3.S3Route;
+export type S3Config = s3.S3Config;
 
 export const handler = (routeConfig: RouteConfig) => {
   const eventProcessorMapping = extractEventProcessorMapping(routeConfig)
