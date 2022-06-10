@@ -9,7 +9,8 @@
     "target": "es2017",
     "strictNullChecks": true,
     "noImplicitAny": true,
-    "strict": true
+    "strict": true,
+    "outDir": "dist"
   },
   "exclude": [
     "./test/**",
